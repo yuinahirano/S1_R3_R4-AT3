@@ -148,6 +148,28 @@ namespace S1_R3_R4_AT2.Controllers
 
         }
 
+        [HttpDelete("{id}")]
+        public IActionResult DeleteCliente(Guid id)
+        {
+            try
+            {
+
+                Cliente cliente = ctx.Clientes.FirstOrDefault(c => c.ClienteId == id);
+
+                if (cliente == null)
+                    return NotFound();
+
+                ctx.Clientes.Remove(cliente);
+                ctx.SaveChanges();
+                return Ok();
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Erro interno", detalhe = ex.Message });
+
+            }
+        }
     }
 
     public static class ValidadorCpf
