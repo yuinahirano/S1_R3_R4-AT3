@@ -4,15 +4,17 @@ using S1_R3_R4_AT2.Context;
 using S1_R3_R4_AT2.Models;
 using S1_R3_R4_AT2.DTOs;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.IdentityModel.Tokens;
 
 namespace S1_R3_R4_AT2.Controllers
 {
     [ApiController]
-    [Route("api/{controller}")]
+    [Route("api/[controller]")]
     public class ClienteController : ControllerBase
     {
 
         MainContext ctx = new MainContext();
+        private static readonly HttpClient _httpClient = new HttpClient();
 
         [HttpGet]
         public IActionResult GetAllClientes()
@@ -48,7 +50,7 @@ namespace S1_R3_R4_AT2.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateCliente(Cliente cliente)
+        public async Task<IActionResult> CreateCliente([FromBody] Cliente cliente)
         {
             try
             {
@@ -64,6 +66,37 @@ namespace S1_R3_R4_AT2.Controllers
 
                 }
 
+                //validação do endereço
+                //if (cliente.Enderecos == null || !cliente.Enderecos.Any())
+                //    return BadRequest("O cliente deve ter pelo menos um endereço");
+
+                if (cliente.Enderecos != null)
+                {
+                    //para cada endereco dentro de cliente.enderecos
+                    foreach (var endereco in cliente.Enderecos)
+                    {
+
+                        string cepLimpo = new string(endereco.Cep.Where(char.IsDigit).ToArray());
+                        if (cepLimpo.Length != 8)
+                            return BadRequest($"{endereco.Cep} inválido");
+
+                        //consulta no viacep
+                        var response = await _httpClient.GetAsync($"https://viacep.com.br/ws/{cepLimpo}/json/");
+                        var dados = await response.Content.ReadFromJsonAsync<ViaCepResponse>();
+
+                        if (dados == null)
+                            return BadRequest($"CEP não encontrado");
+
+                        //garante que os dados do banco batem com os do ViaCEP
+                        endereco.Logradouro = dados.Logradouro;
+                        endereco.Bairro = dados.Bairro;
+                        endereco.Cidade = dados.Localidade;
+                        endereco.Uf = dados.Uf;
+                        endereco.Cep = dados.Cep;
+                    }
+
+
+                }
                 ctx.Clientes.Add(cliente);
                 ctx.SaveChanges();
                 return Created();
@@ -102,6 +135,7 @@ namespace S1_R3_R4_AT2.Controllers
                     clienteBanco.Cpf = cliente.Cpf;
                 }
 
+
                 ctx.Clientes.Update(clienteBanco);
                 ctx.SaveChanges();
                 return Ok(cliente);
@@ -113,6 +147,7 @@ namespace S1_R3_R4_AT2.Controllers
             }
 
         }
+
     }
 
     public static class ValidadorCpf
@@ -151,5 +186,14 @@ namespace S1_R3_R4_AT2.Controllers
         }
     }
 
+    public class ViaCepResponse
+    {
+        public string Cep { get; set; }
+        public string Logradouro { get; set; }
+        public string Bairro { get; set; }
+        public string Localidade { get; set; }
+        public string Uf { get; set; }
+        public bool Erro { get; set; }
+    }
 
 }
