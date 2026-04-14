@@ -11,5 +11,5 @@ public partial class Telefone
 
     public Guid ClienteId { get; set; }
 
-    public virtual ClienteUpdateDTO Cliente { get; set; } = null!;
+    public virtual Cliente Cliente { get; set; } = null!;
 }

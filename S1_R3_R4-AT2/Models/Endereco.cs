@@ -22,4 +22,6 @@ public partial class Endereco
     public int Numero { get; set; }
 
     public Guid ClienteId { get; set; }
+
+    public virtual Cliente Cliente { get; set; } = null!;
 }

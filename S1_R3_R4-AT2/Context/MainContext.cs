@@ -28,7 +28,7 @@ public partial class MainContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=.\\sqlexpress01; Initial Catalog=S1_R3_R4_AT2_PBE2; TrustServerCertificate=true;Trusted_Connection=true");
+        => optionsBuilder.UseSqlServer("Data Source=.\\sqlexpress01;Initial Catalog=S1_R3_R4_AT2_PBE2;TrustServerCertificate=True;Trusted_Connection=True");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -112,6 +112,11 @@ public partial class MainContext : DbContext
                 .IsUnicode(false)
                 .IsFixedLength()
                 .HasColumnName("uf");
+
+            entity.HasOne(d => d.Cliente).WithMany(p => p.Enderecos)
+                .HasForeignKey(d => d.ClienteId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Endereco_clienteId");
         });
 
         modelBuilder.Entity<Produto>(entity =>

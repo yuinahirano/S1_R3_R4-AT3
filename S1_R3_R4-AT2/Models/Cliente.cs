@@ -13,5 +13,7 @@ public partial class Cliente
 
     public DateTime DataCad { get; set; }
 
+    public virtual ICollection<Endereco> Enderecos { get; set; } = new List<Endereco>();
+
     public virtual ICollection<Telefone> Telefones { get; set; } = new List<Telefone>();
 }
